@@ -617,12 +617,24 @@ async function generatePDF(openEmail = false) {
             const signatureImage = await pdfDoc.embedPng(signatureImageBytes);
 
             const sigField = FORM_FIELDS.signature_image;
-            const signatureDims = signatureImage.scale(0.25);
+
+            // Constrain signature to fit within a standard signature line
+            const maxWidth = 180;
+            const maxHeight = 40;
+
+            let width = signatureImage.width;
+            let height = signatureImage.height;
+
+            // Scale down to fit within bounds while maintaining aspect ratio
+            const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+            width *= scale;
+            height *= scale;
+
             page2.drawImage(signatureImage, {
                 x: toPdfX(sigField.x),
-                y: toPdfY(sigField.y),
-                width: signatureDims.width,
-                height: signatureDims.height
+                y: toPdfY(sigField.y) - height + 10,
+                width: width,
+                height: height
             });
         }
 
