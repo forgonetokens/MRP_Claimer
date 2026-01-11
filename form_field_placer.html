@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRP Form Field Placer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #0f3460;
+        }
+        
+        .main {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            background: #1a1a2e;
+        }
+        
+        h1 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        
+        h2 {
+            font-size: 1rem;
+            margin: 15px 0 10px;
+            color: #0f3460;
+            background: #e94560;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        
+        .instructions {
+            background: #0f3460;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        
+        .instructions li {
+            margin: 5px 0 5px 20px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin: 4px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #ff6b6b;
+        }
+        
+        .btn-secondary {
+            background: #0f3460;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #1a4a7a;
+        }
+        
+        .btn-danger {
+            background: #c0392b;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e74c3c;
+        }
+        
+        .page-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .page-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #0f3460;
+            background: transparent;
+            color: #eee;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .page-btn.active {
+            background: #e94560;
+            border-color: #e94560;
+        }
+        
+        .page-btn:hover:not(.active) {
+            border-color: #e94560;
+        }
+        
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #formImage {
+            display: block;
+            max-width: 100%;
+        }
+        
+        .field-box {
+            position: absolute;
+            border: 2px solid #e94560;
+            background: rgba(233, 69, 96, 0.2);
+            cursor: move;
+            min-width: 20px;
+            min-height: 14px;
+        }
+        
+        .field-box.selected {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.2);
+        }
+        
+        .field-box .field-label {
+            position: absolute;
+            top: -18px;
+            left: 0;
+            font-size: 10px;
+            background: #e94560;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+        
+        .field-box.selected .field-label {
+            background: #00ff88;
+            color: #1a1a2e;
+        }
+        
+        .field-box .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #e94560;
+            border-radius: 2px;
+        }
+        
+        .field-box.selected .resize-handle {
+            background: #00ff88;
+        }
+        
+        .resize-handle.se {
+            bottom: -5px;
+            right: -5px;
+            cursor: se-resize;
+        }
+        
+        .resize-handle.e {
+            top: 50%;
+            right: -5px;
+            transform: translateY(-50%);
+            cursor: e-resize;
+        }
+        
+        .resize-handle.s {
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: s-resize;
+        }
+        
+        .field-list {
+            margin-top: 15px;
+        }
+        
+        .field-item {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .field-item.selected {
+            background: #1a4a7a;
+            border: 1px solid #00ff88;
+        }
+        
+        .field-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .field-item-name {
+            font-weight: bold;
+            color: #e94560;
+        }
+        
+        .field-item input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #1a1a2e;
+            border-radius: 4px;
+            background: #16213e;
+            color: #eee;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        
+        .field-coords {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        
+        .field-coords label {
+            font-size: 0.7rem;
+            color: #888;
+        }
+        
+        .field-coords input {
+            width: 100%;
+            padding: 4px;
+            margin-top: 2px;
+        }
+        
+        .export-area {
+            margin-top: 15px;
+        }
+        
+        #exportJson {
+            width: 100%;
+            height: 150px;
+            background: #0a0a15;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            color: #00ff88;
+            font-family: monospace;
+            font-size: 0.75rem;
+            padding: 10px;
+            resize: vertical;
+        }
+        
+        .upload-area {
+            border: 2px dashed #0f3460;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .upload-area:hover {
+            border-color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
+        }
+        
+        .upload-area input {
+            display: none;
+        }
+        
+        .zoom-controls {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .zoom-controls input {
+            flex: 1;
+        }
+        
+        .zoom-label {
+            font-size: 0.85rem;
+            min-width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>📋 Form Field Placer</h1>
+            
+            <div class="instructions">
+                <strong>How to use:</strong>
+                <ol>
+                    <li>Upload your form page image</li>
+                    <li>Click "Add Field" then click on the form</li>
+                    <li>Drag to move, use handles to resize</li>
+                    <li>Name each field and set text value</li>
+                    <li>Export coordinates when done</li>
+                </ol>
+            </div>
+            
+            <div class="upload-area" onclick="document.getElementById('imageUpload').click()">
+                <input type="file" id="imageUpload" accept="image/*">
+                📁 Click to upload form image<br>
+                <small>(PNG, JPG)</small>
+            </div>
+            
+            <div class="page-selector">
+                <button class="page-btn active" data-page="1">Page 1</button>
+                <button class="page-btn" data-page="2">Page 2</button>
+            </div>
+            
+            <div class="zoom-controls">
+                <span class="zoom-label">Zoom:</span>
+                <input type="range" id="zoomSlider" min="50" max="200" value="100">
+                <span id="zoomValue">100%</span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <button class="btn btn-primary" id="addFieldBtn">+ Add Field</button>
+                <button class="btn btn-danger" id="deleteFieldBtn">🗑 Delete Selected</button>
+            </div>
+            
+            <h2>Fields</h2>
+            <div class="field-list" id="fieldList">
+                <p style="color: #666; font-size: 0.85rem;">No fields added yet</p>
+            </div>
+            
+            <h2>Export</h2>
+            <div class="export-area">
+                <button class="btn btn-secondary" id="exportBtn" style="width: 100%; margin-bottom: 10px;">
+                    📋 Copy Coordinates to Clipboard
+                </button>
+                <textarea id="exportJson" readonly placeholder="Field coordinates will appear here..."></textarea>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <button class="btn btn-secondary" id="saveBtn" style="width: 48%;">💾 Save</button>
+                <button class="btn btn-secondary" id="loadBtn" style="width: 48%;">📂 Load</button>
+            </div>
+        </div>
+        
+        <div class="main">
+            <div class="canvas-container" id="canvasContainer">
+                <img id="formImage" src="" alt="Upload a form image">
+                <div id="fieldsOverlay"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let fields = { 1: [], 2: [] };
+        let currentPage = 1;
+        let selectedFieldId = null;
+        let isAddingField = false;
+        let isDragging = false;
+        let isResizing = false;
+        let resizeDirection = null;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let fieldStartX = 0;
+        let fieldStartY = 0;
+        let fieldStartW = 0;
+        let fieldStartH = 0;
+        let fieldCounter = 0;
+        let zoom = 1;
+
+        // Elements
+        const imageUpload = document.getElementById('imageUpload');
+        const formImage = document.getElementById('formImage');
+        const canvasContainer = document.getElementById('canvasContainer');
+        const fieldsOverlay = document.getElementById('fieldsOverlay');
+        const fieldList = document.getElementById('fieldList');
+        const exportJson = document.getElementById('exportJson');
+        const addFieldBtn = document.getElementById('addFieldBtn');
+        const deleteFieldBtn = document.getElementById('deleteFieldBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const zoomValue = document.getElementById('zoomValue');
+
+        // Image upload
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    formImage.src = e.target.result;
+                    formImage.onload = () => {
+                        updateZoom();
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Page selector
+        document.querySelectorAll('.page-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentPage = parseInt(btn.dataset.page);
+                renderFields();
+                updateFieldList();
+            });
+        });
+
+        // Zoom
+        zoomSlider.addEventListener('input', (e) => {
+            zoom = e.target.value / 100;
+            zoomValue.textContent = e.target.value + '%';
+            updateZoom();
+        });
+
+        function updateZoom() {
+            formImage.style.width = (formImage.naturalWidth * zoom) + 'px';
+            renderFields();
+        }
+
+        // Add field mode
+        addFieldBtn.addEventListener('click', () => {
+            isAddingField = true;
+            addFieldBtn.textContent = '👆 Click on form...';
+            addFieldBtn.style.background = '#00ff88';
+            addFieldBtn.style.color = '#1a1a2e';
+            canvasContainer.style.cursor = 'crosshair';
+        });
+
+        // Delete field
+        deleteFieldBtn.addEventListener('click', () => {
+            if (selectedFieldId) {
+                fields[currentPage] = fields[currentPage].filter(f => f.id !== selectedFieldId);
+                selectedFieldId = null;
+                renderFields();
+                updateFieldList();
+                updateExport();
+            }
+        });
+
+        // Canvas click for adding fields
+        canvasContainer.addEventListener('click', (e) => {
+            if (!isAddingField) return;
+            
+            const rect = canvasContainer.getBoundingClientRect();
+            const x = Math.round((e.clientX - rect.left) / zoom);
+            const y = Math.round((e.clientY - rect.top) / zoom);
+            
+            fieldCounter++;
+            const newField = {
+                id: 'field_' + fieldCounter,
+                name: 'field_' + fieldCounter,
+                x: x,
+                y: y,
+                width: 100,
+                height: 18,
+                text: '',
+                fontSize: 11,
+                page: currentPage
+            };
+            
+            fields[currentPage].push(newField);
+            selectedFieldId = newField.id;
+            
+            isAddingField = false;
+            addFieldBtn.textContent = '+ Add Field';
+            addFieldBtn.style.background = '';
+            addFieldBtn.style.color = '';
+            canvasContainer.style.cursor = '';
+            
+            renderFields();
+            updateFieldList();
+            updateExport();
+        });
+
+        // Render field boxes
+        function renderFields() {
+            fieldsOverlay.innerHTML = '';
+            
+            fields[currentPage].forEach(field => {
+                const box = document.createElement('div');
+                box.className = 'field-box' + (field.id === selectedFieldId ? ' selected' : '');
+                box.style.left = (field.x * zoom) + 'px';
+                box.style.top = (field.y * zoom) + 'px';
+                box.style.width = (field.width * zoom) + 'px';
+                box.style.height = (field.height * zoom) + 'px';
+                box.dataset.fieldId = field.id;
+                
+                // Label
+                const label = document.createElement('div');
+                label.className = 'field-label';
+                label.textContent = field.name;
+                box.appendChild(label);
+                
+                // Text preview
+                if (field.text) {
+                    const preview = document.createElement('div');
+                    preview.style.cssText = `
+                        font-size: ${field.fontSize * zoom * 0.8}px;
+                        color: #333;
+                        padding: 2px;
+                        overflow: hidden;
+                        white-space: nowrap;
+                    `;
+                    preview.textContent = field.text;
+                    box.appendChild(preview);
+                }
+                
+                // Resize handles
+                ['se', 'e', 's'].forEach(dir => {
+                    const handle = document.createElement('div');
+                    handle.className = 'resize-handle ' + dir;
+                    handle.dataset.direction = dir;
+                    box.appendChild(handle);
+                });
+                
+                // Events
+                box.addEventListener('mousedown', startDrag);
+                
+                fieldsOverlay.appendChild(box);
+            });
+        }
+
+        // Drag handling
+        function startDrag(e) {
+            e.stopPropagation();
+            
+            const fieldId = e.currentTarget.dataset.fieldId;
+            const field = fields[currentPage].find(f => f.id === fieldId);
+            
+            if (e.target.classList.contains('resize-handle')) {
+                isResizing = true;
+                resizeDirection = e.target.dataset.direction;
+            } else {
+                isDragging = true;
+            }
+            
+            selectedFieldId = fieldId;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            fieldStartX = field.x;
+            fieldStartY = field.y;
+            fieldStartW = field.width;
+            fieldStartH = field.height;
+            
+            renderFields();
+            updateFieldList();
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function onDrag(e) {
+            if (!isDragging && !isResizing) return;
+            
+            const field = fields[currentPage].find(f => f.id === selectedFieldId);
+            if (!field) return;
+            
+            const dx = (e.clientX - dragStartX) / zoom;
+            const dy = (e.clientY - dragStartY) / zoom;
+            
+            if (isDragging) {
+                field.x = Math.round(fieldStartX + dx);
+                field.y = Math.round(fieldStartY + dy);
+            } else if (isResizing) {
+                if (resizeDirection.includes('e')) {
+                    field.width = Math.max(20, Math.round(fieldStartW + dx));
+                }
+                if (resizeDirection.includes('s')) {
+                    field.height = Math.max(14, Math.round(fieldStartH + dy));
+                }
+            }
+            
+            renderFields();
+            updateFieldList();
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            isResizing = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+            updateExport();
+        }
+
+        // Field list in sidebar
+        function updateFieldList() {
+            if (fields[currentPage].length === 0) {
+                fieldList.innerHTML = '<p style="color: #666; font-size: 0.85rem;">No fields added yet</p>';
+                return;
+            }
+            
+            fieldList.innerHTML = fields[currentPage].map(field => `
+                <div class="field-item ${field.id === selectedFieldId ? 'selected' : ''}" data-field-id="${field.id}">
+                    <div class="field-item-header">
+                        <span class="field-item-name">${field.name}</span>
+                        <span style="color: #666; font-size: 0.7rem;">P${field.page}</span>
+                    </div>
+                    <input type="text" placeholder="Field name" value="${field.name}" 
+                           onchange="updateFieldName('${field.id}', this.value)">
+                    <input type="text" placeholder="Text value" value="${field.text}" 
+                           onchange="updateFieldText('${field.id}', this.value)">
+                    <div class="field-coords">
+                        <div>
+                            <label>X</label>
+                            <input type="number" value="${field.x}" 
+                                   onchange="updateFieldCoord('${field.id}', 'x', this.value)">
+                        </div>
+                        <div>
+                            <label>Y</label>
+                            <input type="number" value="${field.y}" 
+                                   onchange="updateFieldCoord('${field.id}', 'y', this.value)">
+                        </div>
+                        <div>
+                            <label>Width</label>
+                            <input type="number" value="${field.width}" 
+                                   onchange="updateFieldCoord('${field.id}', 'width', this.value)">
+                        </div>
+                        <div>
+                            <label>Height</label>
+                            <input type="number" value="${field.height}" 
+                                   onchange="updateFieldCoord('${field.id}', 'height', this.value)">
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Click to select
+            document.querySelectorAll('.field-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        selectedFieldId = item.dataset.fieldId;
+                        renderFields();
+                        updateFieldList();
+                    }
+                });
+            });
+        }
+
+        // Update functions
+        window.updateFieldName = (id, value) => {
+            const field = fields[currentPage].find(f => f.id === id);
+            if (field) {
+                field.name = value;
+                renderFields();
+                updateExport();
+            }
+        };
+
+        window.updateFieldText = (id, value) => {
+            const field = fields[currentPage].find(f => f.id === id);
+            if (field) {
+                field.text = value;
+                renderFields();
+                updateExport();
+            }
+        };
+
+        window.updateFieldCoord = (id, prop, value) => {
+            const field = fields[currentPage].find(f => f.id === id);
+            if (field) {
+                field[prop] = parseInt(value) || 0;
+                renderFields();
+                updateExport();
+            }
+        };
+
+        // Export
+        function updateExport() {
+            const allFields = [...fields[1], ...fields[2]];
+            const output = {
+                image_dimensions: {
+                    width: formImage.naturalWidth,
+                    height: formImage.naturalHeight
+                },
+                fields: allFields.map(f => ({
+                    name: f.name,
+                    page: f.page,
+                    x: f.x,
+                    y: f.y,
+                    width: f.width,
+                    height: f.height,
+                    text: f.text,
+                    fontSize: f.fontSize
+                }))
+            };
+            exportJson.value = JSON.stringify(output, null, 2);
+        }
+
+        exportBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(exportJson.value).then(() => {
+                exportBtn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    exportBtn.textContent = '📋 Copy Coordinates to Clipboard';
+                }, 2000);
+            });
+        });
+
+        // Save/Load
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const data = JSON.stringify({ fields, fieldCounter });
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'form_fields.json';
+            a.click();
+        });
+
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        fields = data.fields;
+                        fieldCounter = data.fieldCounter || 0;
+                        renderFields();
+                        updateFieldList();
+                        updateExport();
+                    } catch (err) {
+                        alert('Error loading file');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+
+        // Initial render
+        renderFields();
+        updateFieldList();
+    </script>
+</body>
+</html>
