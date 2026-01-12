@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IATSE MRP Claim Form Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- PDF-lib for PDF generation -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- Signature Pad -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">&larr; Back to Home</a>
+        <header>
+            <h1>IATSE MRP Claim Form</h1>
+            <p class="subtitle">Medical Reimbursement Program</p>
+        </header>
+
+        <div class="profile-actions">
+            <button type="button" id="saveProfile" class="btn btn-secondary">Save Profile</button>
+            <button type="button" id="loadProfile" class="btn btn-secondary">Load Profile</button>
+            <button type="button" id="exportProfile" class="btn btn-secondary">Export Profile</button>
+            <label class="btn btn-secondary import-btn">
+                Import Profile
+                <input type="file" id="importProfile" accept=".json" hidden>
+            </label>
+        </div>
+
+        <form id="claimForm">
+            <!-- Participant Section -->
+            <section class="form-section">
+                <h2>Participant Information</h2>
+
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label for="participantLastName">Last Name *</label>
+                        <input type="text" id="participantLastName" name="participantLastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="participantFirstName">First Name *</label>
+                        <input type="text" id="participantFirstName" name="participantFirstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="participantMI">M.I.</label>
+                        <input type="text" id="participantMI" name="participantMI" maxlength="1">
+                    </div>
+                </div>
+
+                <div class="form-row two-col">
+                    <div class="form-group">
+                        <label for="participantID">Participant ID # or SSN *</label>
+                        <input type="text" id="participantID" name="participantID" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender *</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="male" required> Male
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="gender" value="female"> Female
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label for="dobMonth">Date of Birth - Month *</label>
+                        <input type="text" id="dobMonth" name="dobMonth" placeholder="MM" maxlength="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dobDay">Day *</label>
+                        <input type="text" id="dobDay" name="dobDay" placeholder="DD" maxlength="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dobYear">Year *</label>
+                        <input type="text" id="dobYear" name="dobYear" placeholder="YYYY" maxlength="4" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="street">Street Address *</label>
+                    <input type="text" id="street" name="street" required>
+                </div>
+
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label for="city">City *</label>
+                        <input type="text" id="city" name="city" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="state">State *</label>
+                        <input type="text" id="state" name="state" maxlength="2" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="zip">Zip *</label>
+                        <input type="text" id="zip" name="zip" required>
+                    </div>
+                </div>
+
+                <div class="form-row two-col">
+                    <div class="form-group">
+                        <label for="telephone">Telephone *</label>
+                        <input type="tel" id="telephone" name="telephone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="otherCoverage">Name of Other Group Health Plan Coverage</label>
+                    <input type="text" id="otherCoverage" name="otherCoverage" placeholder="Leave blank if none">
+                </div>
+            </section>
+
+            <!-- Patient Section -->
+            <section class="form-section">
+                <h2>Patient Information</h2>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="sameAsParticipant">
+                        Same as participant
+                    </label>
+                </div>
+
+                <div id="patientFields">
+                    <div class="form-row three-col">
+                        <div class="form-group">
+                            <label for="patientLastName">Last Name *</label>
+                            <input type="text" id="patientLastName" name="patientLastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientFirstName">First Name *</label>
+                            <input type="text" id="patientFirstName" name="patientFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientMI">M.I.</label>
+                            <input type="text" id="patientMI" name="patientMI" maxlength="1">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="relationship">Relationship to Participant *</label>
+                        <select id="relationship" name="relationship" required>
+                            <option value="">Select relationship</option>
+                            <option value="Self">Self</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Child">Child</option>
+                            <option value="Domestic Partner">Domestic Partner</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row three-col">
+                        <div class="form-group">
+                            <label for="patientDobMonth">Date of Birth - Month *</label>
+                            <input type="text" id="patientDobMonth" name="patientDobMonth" placeholder="MM" maxlength="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientDobDay">Day *</label>
+                            <input type="text" id="patientDobDay" name="patientDobDay" placeholder="DD" maxlength="2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientDobYear">Year *</label>
+                            <input type="text" id="patientDobYear" name="patientDobYear" placeholder="YYYY" maxlength="4" required>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Expense Line Items -->
+            <section class="form-section">
+                <h2>Expense Items</h2>
+                <p class="section-note">List all items you are requesting reimbursement for:</p>
+
+                <div class="expense-table">
+                    <div class="expense-header">
+                        <div>Provider Name</div>
+                        <div>Dates of Service</div>
+                        <div>Amount</div>
+                        <div></div>
+                    </div>
+                    <div id="expenseRows">
+                        <!-- Dynamic rows will be added here -->
+                    </div>
+                </div>
+
+                <button type="button" id="addRow" class="btn btn-secondary">+ Add Row</button>
+
+                <div class="total-row">
+                    <label>Total Amount Requested:</label>
+                    <span id="totalAmount">$0.00</span>
+                </div>
+            </section>
+
+            <!-- Coverage Checkboxes -->
+            <section class="form-section">
+                <h2>Coverage Information</h2>
+                <p class="section-note">Is this patient covered by a:</p>
+
+                <div class="coverage-options">
+                    <div class="coverage-item">
+                        <span>Dental Plan:</span>
+                        <label class="radio-label">
+                            <input type="radio" name="dentalPlan" value="yes"> Yes
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="dentalPlan" value="no" checked> No
+                        </label>
+                    </div>
+                    <div class="coverage-item">
+                        <span>Vision Plan:</span>
+                        <label class="radio-label">
+                            <input type="radio" name="visionPlan" value="yes"> Yes
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="visionPlan" value="no" checked> No
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Receipt Upload -->
+            <section class="form-section">
+                <h2>Upload Receipts</h2>
+                <p class="section-note">Attach receipts, EOBs, or other supporting documents (images or PDFs)</p>
+
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="receiptUpload" multiple accept="image/*,.pdf" hidden>
+                    <label for="receiptUpload" class="upload-label">
+                        <span class="upload-icon">+</span>
+                        <span>Click or drag files here</span>
+                        <span class="upload-hint">Supports: JPG, PNG, PDF</span>
+                    </label>
+                </div>
+
+                <div id="uploadSizeInfo" class="upload-size-info">0 MB / 25 MB</div>
+                <div id="fileList" class="file-list"></div>
+            </section>
+
+            <!-- Signature -->
+            <section class="form-section">
+                <h2>Signature</h2>
+                <p class="section-note">By signing below, I certify that the expenses claimed have not been reimbursed and are medical expenses as defined by the IRS.</p>
+
+                <div class="signature-container">
+                    <canvas id="signaturePad"></canvas>
+                    <button type="button" id="clearSignature" class="btn btn-small">Clear Signature</button>
+                </div>
+
+                <div class="form-row two-col">
+                    <div class="form-group">
+                        <label for="signatureDate">Date *</label>
+                        <input type="date" id="signatureDate" name="signatureDate" required>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submit Actions -->
+            <section class="form-section actions">
+                <button type="button" id="generatePDF" class="btn btn-primary btn-large">
+                    Generate PDF Only
+                </button>
+                <button type="button" id="generateAndEmail" class="btn btn-primary btn-large">
+                    Generate & Email
+                </button>
+            </section>
+        </form>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message hidden"></div>
+
+        <!-- Email Instructions Modal -->
+        <div id="emailModal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Almost Done!</h3>
+                <p>Your PDF has been downloaded. Please:</p>
+                <ol>
+                    <li>Find the downloaded PDF file</li>
+                    <li>Attach it to the email that just opened</li>
+                    <li>Send the email to complete your claim</li>
+                </ol>
+                <button type="button" id="closeModal" class="btn btn-primary">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -41,6 +41,19 @@ body {
     padding: 1rem;
 }
 
+.back-link {
+    display: inline-block;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
 /* Header */
 header {
     text-align: center;
@@ -205,6 +218,28 @@ header h1 {
     .form-row.three-col {
         grid-template-columns: 1fr;
     }
+}
+
+/* Date Input Group */
+.date-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.date-input-group input {
+    width: 60px;
+    text-align: center;
+    padding: 0.6rem 0.5rem;
+}
+
+.date-input-group input[maxlength="4"] {
+    width: 80px;
+}
+
+.date-input-group span {
+    color: var(--text-muted);
+    font-weight: 500;
 }
 
 /* Radio and Checkbox */
@@ -457,7 +492,21 @@ header h1 {
     margin-bottom: 1rem;
 }
 
-#signaturePad {
+.signature-block {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.signature-block:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+#signaturePad,
+#patientSignaturePad,
+#memberSignaturePad {
     width: 100%;
     height: 150px;
     border: 1px solid var(--border-color);
@@ -466,7 +515,9 @@ header h1 {
     touch-action: none;
 }
 
-#clearSignature {
+#clearSignature,
+#clearPatientSignature,
+#clearMemberSignature {
     margin-top: 0.5rem;
 }
 
